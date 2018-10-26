@@ -50,3 +50,11 @@ class GreedyAgent(Agent):
 
 def scoreEvaluation(state):
     return state.getScore()
+
+class RandomPacmanAgent(Agent):
+    
+    "A Pacman agent that takes random actions"
+    def getAction(self, state):
+        # Generate candidate actions
+        legal = state.getLegalPacmanActions()
+        return random.choice(legal)

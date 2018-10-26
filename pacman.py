@@ -55,6 +55,7 @@ import os
 import pdb
 import pacman
 import ghostAgents
+
 ###################################################
 # YOUR INTERFACE TO THE PACMAN WORLD: A GameState #
 ###################################################
@@ -63,9 +64,9 @@ import rlcompleter
 SCARED_TIME = 40    # Moves ghosts are scared
 COLLISION_TOLERANCE = 0.7  # How close ghosts must be to Pacman to kill
 TIME_PENALTY = 1  # Number of points lost each round
-PACMAN_NUM_TRAINING = 50 # Do not Change
-MAX_TIME = 500 # Do not Change
-global NUM_GAMES_GLOBAL,max_time_to_run 
+PACMAN_NUM_TRAINING = 50  # Do not Change
+MAX_TIME = 500 # Do not change
+global NUM_GAMES_GLOBAL, max_time_to_run 
 
 
 class GameState:
@@ -411,7 +412,7 @@ class PacmanRules:
             numFood = state.getNumFood()
             if numFood == 0 and not state.data._lose:
                 state.data.scoreChange += 500
-                if NUM_GAMES_GLOBAL >= PACMAN_NUM_TRAINING:
+                if NUM_GAMES_GLOBAL >= (PACMAN_NUM_TRAINING+1):
                     state.data._win = False
                     state.data._lose = True
                 else:
@@ -498,7 +499,7 @@ class GhostRules:
 
              #   state.data.ghostScore += 500
 
-            if NUM_GAMES_GLOBAL >= PACMAN_NUM_TRAINING:
+            if NUM_GAMES_GLOBAL >= (PACMAN_NUM_TRAINING+1):
                 print("Ghost Died")
                 state.data._lose = True
                 state.data._win = False
@@ -509,7 +510,7 @@ class GhostRules:
             state.data._eaten[agentIndex] = True
         else:
             
-            if NUM_GAMES_GLOBAL >= PACMAN_NUM_TRAINING:
+            if NUM_GAMES_GLOBAL >= (PACMAN_NUM_TRAINING+1):
                     
                # if agentIndex == 1:    
                 state.data.ghostScore += 500
@@ -555,7 +556,7 @@ def parseAgentArgs(str):
     return opts
 
 
-def readCommand(argv,pacmantrain=True):
+def readCommand(argv,pacmantrain=True,pacmanTypestr="Smart",pacmanInstance=None):
     """
     Processes the command used to run pacman from the command line.
     """
@@ -600,8 +601,11 @@ def readCommand(argv,pacmantrain=True):
                       help='A recorded game file (pickle) to replay', default=None)
     parser.add_option('-a', '--agentArgs', dest='agentArgs',
                       help='Comma separated values sent to agent. e.g. "opt1=val1,opt2,opt3=val3"')
-    parser.add_option('-x', '--numTraining', dest='numTraining', type='int',
+    parser.add_option('-x', '--numTrainingSimple', dest='numTrainingSimple', type='int',
                       help=default('How many episodes are training (suppresses output)'), default=5000)
+    parser.add_option('-y', '--numTrainingSmart', dest='numTrainingSmart', type='int',
+                      help=default('How many episodes are training (suppresses output)'), default=5000)
+    
     parser.add_option('--frameTime', dest='frameTime', type='float',
                       help=default('Time to delay between frames; <0 means keyboard'), default=0.1)
     parser.add_option('-c', '--catchExceptions', action='store_true', dest='catchExceptions',
@@ -627,18 +631,35 @@ def readCommand(argv,pacmantrain=True):
     noKeyboard = options.gameToReplay == None and (
         options.textGraphics or options.quietGraphics)
     if pacmantrain == True:
-        pacmanType = loadAgent(options.pacman, noKeyboard)
-        agentOpts = {"extractor":"AdvancedExtractor"}#parseAgentArgs(options.agentArgs)
-        agentOpts['numTraining'] = PACMAN_NUM_TRAINING
-        pacman = pacmanType(**agentOpts)  # Instantiate Pacman with agentArgs
-        args['pacman'] = pacman
+        
+        if pacmanTypestr == "Simple":
+            args["startIndex"]=0
+            args["endIndex"]= 1
+            if options.pacman == "RandomPacmanAgent":
+                pacmanType = loadAgent(options.pacman, noKeyboard)
+                agentOpts={}
+            
+            else:
+                pacmanType = loadAgent("PacmanBaseAgent", noKeyboard)
+                agentOpts = {"extractor":"SimpleExtractor"}
+                agentOpts['numTraining'] = 1
+        else:
+            pacmanType = loadAgent("PacmanBaseAgent", noKeyboard)
+            args["startIndex"] = 1
+            args["endIndex"] =  PACMAN_NUM_TRAINING + 1
+            agentOpts = {"extractor":"AdvancedExtractor"}
+            agentOpts['numTraining'] = PACMAN_NUM_TRAINING
+        pacmanInstance = pacmanType(**agentOpts)  # Instantiate Pacman with agentArgs
+        args['pacman'] = pacmanInstance
     
     
     
-    args['numTraining'] = options.numTraining + PACMAN_NUM_TRAINING
-      
-    options.numQuiet = int(options.numTraining + PACMAN_NUM_TRAINING)
-    options.numIgnore = int(options.numTraining + PACMAN_NUM_TRAINING)
+    args['numTraining'] = options.numTrainingSimple + options.numTrainingSmart + PACMAN_NUM_TRAINING + 1
+    if pacmantrain == False:
+        args['numTrainingSimple'] = options.numTrainingSimple 
+        args['numTrainingSmart'] = options.numTrainingSmart
+    options.numQuiet = int(options.numTrainingSimple + options.numTrainingSmart + PACMAN_NUM_TRAINING +1)
+    options.numIgnore = int(options.numTrainingSimple + options.numTrainingSmart + PACMAN_NUM_TRAINING +1)
 
     # Choose a ghost agent
     ghostType={}
@@ -648,12 +669,13 @@ def readCommand(argv,pacmantrain=True):
         if pacmantrain == True:
             ghostType[k] = loadAgent('RandomGhost', noKeyboard)
         else:
-        
             if options.ghost == "RandomGhost":
                 ghostType[k] = loadAgent('RandomGhost', noKeyboard)
+            elif options.ghost == "DirectionalGhost":
+                ghostType[k] = loadAgent('DirectionalGhost', noKeyboard)
             else:
                 ghostOpts.append(parseAgentArgs(options.agentArgs))
-                ghostOpts[k]['numTraining'] = options.numTraining
+                ghostOpts[k]['numTraining'] = options.numTrainingSimple + options.numTrainingSmart
                 ghostOpts[k]['agentIndex'] = k+1
                 ghostType[k] = loadAgent(options.ghost, noKeyboard)
     if pacmantrain == True:
@@ -661,6 +683,8 @@ def readCommand(argv,pacmantrain=True):
     else:
         #print("I am here")
         if options.ghost == "RandomGhost":
+            args['ghosts'] = [ghostType[i](i+1) for i in range(options.numGhosts)]
+        elif options.ghost == "DirectionalGhost":
             args['ghosts'] = [ghostType[i](i+1) for i in range(options.numGhosts)]
         else:
             args['ghosts'] = [ghostType[i](**ghostOpts[i]) for i in range(options.numGhosts)]
@@ -679,7 +703,7 @@ def readCommand(argv,pacmantrain=True):
         import graphicsDisplay
         args['display'] = graphicsDisplay.PacmanGraphics(
             options.zoom, frameTime=options.frameTime)
-    args['numGames'] = options.numGames + PACMAN_NUM_TRAINING
+    args['numGames'] = options.numGames + PACMAN_NUM_TRAINING + 1
     args['record'] = options.record
     args['catchExceptions'] = options.catchExceptions
     args['timeout'] = options.timeout
@@ -756,9 +780,7 @@ def replayGame(layout, actions, display):
         rules.process(state, game)
 
     display.finish()
-
-
-def runGames(layout, pacman, ghosts, display, numGames, record, numTraining=0, catchExceptions=False, timeout=30):
+def runGamesGhostTrain(layout, pacman, ghosts, display, numGames, record, numTraining=0, catchExceptions=False, timeout=30,startIndex=0,endIndex=0):
     global NUM_GAMES_GLOBAL,max_time_to_run
     import __main__
     __main__.__dict__['_display'] = display
@@ -768,8 +790,8 @@ def runGames(layout, pacman, ghosts, display, numGames, record, numTraining=0, c
     rules = ClassicGameRules(timeout)
     games = []
 
-
-    for i in range(PACMAN_NUM_TRAINING,numGames):
+    #print(startIndex,endIndex)
+    for i in range(startIndex,endIndex):
         max_time_to_run = MAX_TIME
         NUM_GAMES_GLOBAL = i
         beQuiet = i < numTraining
@@ -782,12 +804,58 @@ def runGames(layout, pacman, ghosts, display, numGames, record, numTraining=0, c
         else:
             gameDisplay = display
             rules.quiet = False
+        
         game = rules.newGame(layout, pacman, ghosts,
                              gameDisplay, beQuiet, catchExceptions)
         game.run()
 
         if not beQuiet:
             games.append(game)
+
+        if record:
+            import time
+            import pickle
+            fname = ('recorded-game-%d' % (i + 1)) + \
+                '-'.join([str(t) for t in time.localtime()[1:6]])
+            f = file(fname, 'w')
+            components = {'layout': layout, 'actions': game.moveHistory}
+            pickle.dump(components, f)
+            f.close()
+
+    
+    return games
+
+def runGames(layout, pacman, ghosts, display, numGames, record, numTraining=0, catchExceptions=False, timeout=30,startIndex=0,endIndex=0):
+    global NUM_GAMES_GLOBAL,max_time_to_run
+    import __main__
+    __main__.__dict__['_display'] = display
+
+    # print(numGames)
+    # pdb.set_trace()
+    rules = ClassicGameRules(timeout)
+    games = []
+
+
+    for i in range(startIndex,endIndex):
+        max_time_to_run = MAX_TIME
+        NUM_GAMES_GLOBAL = i
+        beQuiet = i < numTraining
+        #beQuiet = True
+        if beQuiet:
+                # Suppress output and graphics
+            import textDisplay
+            gameDisplay = textDisplay.NullGraphics()
+            rules.quiet = True
+        else:
+            gameDisplay = display
+            rules.quiet = False
+        
+        game = rules.newGame(layout, pacman, ghosts,
+                             gameDisplay, beQuiet, catchExceptions)
+        game.run()
+
+        #if not beQuiet:
+        games.append(game)
 
         if record:
             import time
@@ -812,7 +880,7 @@ def runGames(layout, pacman, ghosts, display, numGames, record, numTraining=0, c
 
     return games
     
-def runGamesPacmanTrain(layout, pacman, ghosts, display, numGames, record, numTraining=0, catchExceptions=False, timeout=30):
+def runGamesPacmanTrain(layout, pacman, ghosts, display, numGames, record, numTraining=0, catchExceptions=False, timeout=30,startIndex=0,endIndex=0):
     global NUM_GAMES_GLOBAL,max_time_to_run
     import __main__
     __main__.__dict__['_display'] = display
@@ -823,7 +891,7 @@ def runGamesPacmanTrain(layout, pacman, ghosts, display, numGames, record, numTr
     games = []
 
 
-    for i in range(PACMAN_NUM_TRAINING):
+    for i in range(startIndex,endIndex):
         max_time_to_run = MAX_TIME
         NUM_GAMES_GLOBAL = i
         beQuiet = i < numTraining
@@ -855,14 +923,39 @@ if __name__ == '__main__':
     > python pacman.py --help
     """
     max_time_to_run = MAX_TIME
-    args = readCommand(sys.argv[1:],pacmantrain=True)  # Get game components based on input
+    pacman1=None
+    args = readCommand(sys.argv[1:],pacmantrain=True,pacmanTypestr = "Simple",pacmanInstance = pacman1)  # Get game components based on input
+    pacman1 = args["pacman"]
+    runGamesPacmanTrain(**args)
+    print("Simple Pacman Trained ",pacman1)
     
-    pacman = runGamesPacmanTrain(**args)
-    args = readCommand(sys.argv[1:],pacmantrain=False)  # Get game components based on input
-    args['pacman'] = pacman
-    print("Finished Pacman Training")
+    pacman2=None
+    args_secondpacman = readCommand(sys.argv[1:],pacmantrain=True,pacmanTypestr="Smart",pacmanInstance=pacman2)  # Get game components based on input
+    pacman2 = args_secondpacman["pacman"]
+    runGamesPacmanTrain(**args_secondpacman)
+    print("Smart Pacman Trained ",pacman2)
     
-    runGames(**args)
+    args_ghost = readCommand(sys.argv[1:],pacmantrain=False,pacmanTypestr="None")  # Get game components based on input
+    numSimple = args_ghost.pop("numTrainingSimple")
+    numSmart = args_ghost.pop("numTrainingSmart")
+    args_ghost['pacman'] = pacman1
+    args_ghost["startIndex"] = 1 + PACMAN_NUM_TRAINING
+    args_ghost["endIndex"] = 1 + PACMAN_NUM_TRAINING + numSimple
+    
+    runGamesGhostTrain(**args_ghost)
+    print("Ghost Trained with simple pacman")
+    args_ghost.pop('pacman')
+    args_ghost['pacman'] = pacman2
+    args_ghost["startIndex"] = 1 + PACMAN_NUM_TRAINING + numSimple
+    args_ghost["endIndex"] = 1 + PACMAN_NUM_TRAINING + numSimple + numSmart 
+    runGamesGhostTrain(**args_ghost)
+    print("Ghost Trained with smart pacman")
+    args_ghost["startIndex"] = 1+PACMAN_NUM_TRAINING + numSimple + numSmart 
+    args_ghost["endIndex"] = args_ghost["numGames"] 
+    
+    print("Running test episodes")
+    
+    runGames(**args_ghost)
 
     # import cProfile
     # cProfile.run("runGames( **args )")
