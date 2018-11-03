@@ -61,7 +61,7 @@ import ghostAgents
 ###################################################
 import rlcompleter
 
-SCARED_TIME = 40    # Moves ghosts are scared
+SCARED_TIME = 20    # Moves ghosts are scared
 COLLISION_TOLERANCE = 0.7  # How close ghosts must be to Pacman to kill
 TIME_PENALTY = 1  # Number of points lost each round
 PACMAN_NUM_TRAINING = 50  # Do not Change
@@ -445,8 +445,10 @@ class GhostRules:
         reverse = Actions.reverseDirection(conf.direction)
         if Directions.STOP in possibleActions:
             possibleActions.remove(Directions.STOP)
-        if reverse in possibleActions and len(possibleActions) > 1:
-            possibleActions.remove(reverse)
+        #ghostState = state.data.agentStates[ghostIndex]
+        #if ghostState.scaredTimer == 0:
+        #if reverse in possibleActions and len(possibleActions) > 1:
+        #   possibleActions.remove(reverse)
         return possibleActions
     getLegalActions = staticmethod(getLegalActions)
 
