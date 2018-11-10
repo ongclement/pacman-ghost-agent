@@ -20,23 +20,23 @@ import random,util,math
 import pickle
 class QLearningGhostAgent(ReinforcementGhostAgent):
     """
-      Q-Learning Ghost Agent
+    Q-Learning Ghost Agent
 
-      Functions you should fill in:
+    Functions you should fill in:
         - computeValueFromQValues
         - computeActionFromQValues
         - getQValue
         - getAction
         - update
 
-      Instance variables you have access to
+    Instance variables you have access to
         - self.epsilon (exploration prob)
         - self.alpha (learning rate)
         - self.discount (discount rate)
 
-      Functions you should use
+    Functions you should use
         - self.getLegalActions(state)
-          which returns legal actions for a state
+        which returns legal actions for a state
     """
     def __init__(self,epsilon=0.05,gamma=0.8,alpha=0.2, numTraining=0,agentIndex=1, extractor='GhostIdentityExtractor', **args):
         "You can initialize Q-values here..."
@@ -55,9 +55,9 @@ class QLearningGhostAgent(ReinforcementGhostAgent):
 
     def getQValue(self, state, action):
         """
-          Returns Q(state,action)
-          Should return 0.0 if we have never seen a state
-          or the Q node value otherwise
+        Returns Q(state,action)
+        Should return 0.0 if we have never seen a state
+        or the Q node value otherwise
         """
         return self.q_values[(state, action)]
 
@@ -100,6 +100,3 @@ class QLearningGhostAgent(ReinforcementGhostAgent):
 
     def getValue(self, state):
         return self.computeValueFromQValues(state)
-
-
-    
