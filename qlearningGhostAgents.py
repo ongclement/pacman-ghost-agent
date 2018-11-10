@@ -65,7 +65,6 @@ class QLearningGhostAgent(ReinforcementGhostAgent):
         for feature in features.keys():
             qvalue += self.weights[feature] * features[feature]
         return qvalue
-        #util.raiseNotDefined()
 
 
     def computeValueFromQValues(self, state):
@@ -84,7 +83,7 @@ class QLearningGhostAgent(ReinforcementGhostAgent):
             if self.getQValue(state,action) > maxqvalue:
                 maxqvalue = self.getQValue(state,action)
         return maxqvalue  
-        #util.raiseNotDefined()
+
         
     def computeActionFromQValues(self, state):
         """
@@ -114,6 +113,7 @@ class QLearningGhostAgent(ReinforcementGhostAgent):
            Should update your weights based on transition
         """
         "*** YOUR CODE HERE ***"
+        print(reward)
         actionsFromNextState = self.getLegalActions(nextState)
         maxqnext = -999999
         for act in actionsFromNextState:
@@ -123,10 +123,11 @@ class QLearningGhostAgent(ReinforcementGhostAgent):
             maxqnext = 0
         diff = (reward + (self.discount * maxqnext)) - self.getQValue(state,action)
         features = self.featExtractor.getFeatures(state,action)
-        self.qvalue[(state,action)] += self.alpha * diff 
+        self.q_values[(state,action)] += self.alpha * diff 
         for feature in features.keys():
             self.weights[feature] += self.alpha * diff * features[feature]
         #util.raiseNotDefined()
+
 
     def final(self, state):
         "Called at the end of each game."
@@ -144,11 +145,15 @@ class QLearningGhostAgent(ReinforcementGhostAgent):
         #Uncomment the following if you want one of your agent to be a random agent.
         #if self.agentIndex == 1:
         #    return random.choice(self.getLegalActions(state))
-        if util.flipCoin(self.epsilon):
-            return random.choice(self.getLegalActions(state))
+        if self.agentIndex == 1:
+            action = random.choice(self.getLegalActions(state))
+            self.doAction(state, action)
+            return action
         else:
-            return self.computeActionFromQValues(state)
-        return 
+            action = self.computeActionFromQValues(state)
+            self.doAction(state, action)
+            return action
+            
 
     def getPolicy(self, state):
         return self.computeActionFromQValues(state)
