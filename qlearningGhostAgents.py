@@ -55,27 +55,78 @@ class QLearningGhostAgent(ReinforcementGhostAgent):
 
     def getQValue(self, state, action):
         """
-          Returns Q(state,action)
-          Should return 0.0 if we have never seen a state
-          or the Q node value otherwise
+          Should return Q(state,action) = w * featureVector
+          where * is the dotProduct operator
         """
-        return self.q_values[(state, action)]
+        "*** YOUR CODE HERE ***"
+        f = self.featExtractor
+        features = f.getFeatures(state,action)
+        qvalue = 0
+        for feature in features.keys():
+            qvalue += self.weights[feature] * features[feature]
+        return qvalue
+        #util.raiseNotDefined()
 
 
     def computeValueFromQValues(self, state):
-        pass
+        """
+          Returns max_action Q(state,action)
+          where the max is over legal actions.  Note that if
+          there are no legal actions, which is the case at the
+          terminal state, you should return a value of 0.0.
+        """
+        "*** YOUR CODE HERE ***"
+        legalActions = self.getLegalActions(state)
+        if len(legalActions) == 0:
+            return 0.0
+        maxqvalue = -999999
+        for action in legalActions:
+            if self.getQValue(state,action) > maxqvalue:
+                maxqvalue = self.getQValue(state,action)
+        return maxqvalue  
+        #util.raiseNotDefined()
         
     def computeActionFromQValues(self, state):
-        pass
+        """
+          Compute the best action to take in a state.  Note that if there
+          are no legal actions, which is the case at the terminal state,
+          you should return None.
+        """
+        "*** YOUR CODE HERE ***"
+        bestAction = [None]
+        legalActions = self.getLegalActions(state)
+        maxqvalue = -999999
+        for action in legalActions:
+            if self.getQValue(state,action) > maxqvalue:
+                maxqvalue = self.getQValue(state,action)
+                bestAction = [action]
+            elif self.getQValue(state,action) == maxqvalue:
+                bestAction.append(action)
+
+        return random.choice(bestAction)
+        #util.raiseNotDefined()
         
     def getWeights(self):
         return self.weights
 
-    def getQValue(self, state, action):
-        pass
-
     def update(self, state, action, nextState, reward):
-        pass
+        """
+           Should update your weights based on transition
+        """
+        "*** YOUR CODE HERE ***"
+        actionsFromNextState = self.getLegalActions(nextState)
+        maxqnext = -999999
+        for act in actionsFromNextState:
+            if self.getQValue(nextState,act) > maxqnext:
+                maxqnext = self.getQValue(nextState,act)
+        if maxqnext == -999999:
+            maxqnext = 0
+        diff = (reward + (self.discount * maxqnext)) - self.getQValue(state,action)
+        features = self.featExtractor.getFeatures(state,action)
+        self.qvalue[(state,action)] += self.alpha * diff 
+        for feature in features.keys():
+            self.weights[feature] += self.alpha * diff * features[feature]
+        #util.raiseNotDefined()
 
     def final(self, state):
         "Called at the end of each game."
@@ -92,7 +143,11 @@ class QLearningGhostAgent(ReinforcementGhostAgent):
     def getAction(self, state):
         #Uncomment the following if you want one of your agent to be a random agent.
         #if self.agentIndex == 1:
-            #return random.choice(self.getLegalActions(state))
+        #    return random.choice(self.getLegalActions(state))
+        if util.flipCoin(self.epsilon):
+            return random.choice(self.getLegalActions(state))
+        else:
+            return self.computeActionFromQValues(state)
         return 
 
     def getPolicy(self, state):
