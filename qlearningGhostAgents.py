@@ -52,20 +52,21 @@ class QLearningGhostAgent(ReinforcementGhostAgent):
         self.weights = util.Counter()
         ReinforcementGhostAgent.__init__(self, **args)
         
-
+    
     def getQValue(self, state, action):
         """
-          Should return Q(state,action) = w * featureVector
-          where * is the dotProduct operator
+        Normal Q learning
         """
-        "*** YOUR CODE HERE ***"
+        """
+        return self.q_values[state,action]
+        """
+
         f = self.featExtractor
         features = f.getFeatures(state,action)
         qvalue = 0
         for feature in features.keys():
             qvalue += self.weights[feature] * features[feature]
-        return qvalue
-
+        return qvalue  
 
     def computeValueFromQValues(self, state):
         """
@@ -74,7 +75,6 @@ class QLearningGhostAgent(ReinforcementGhostAgent):
           there are no legal actions, which is the case at the
           terminal state, you should return a value of 0.0.
         """
-        "*** YOUR CODE HERE ***"
         legalActions = self.getLegalActions(state)
         if len(legalActions) == 0:
             return 0.0
@@ -91,7 +91,6 @@ class QLearningGhostAgent(ReinforcementGhostAgent):
           are no legal actions, which is the case at the terminal state,
           you should return None.
         """
-        "*** YOUR CODE HERE ***"
         bestAction = [None]
         legalActions = self.getLegalActions(state)
         maxqvalue = -999999
@@ -110,10 +109,15 @@ class QLearningGhostAgent(ReinforcementGhostAgent):
 
     def update(self, state, action, nextState, reward):
         """
-           Should update your weights based on transition
+        normal q learning
+        """    
         """
-        "*** YOUR CODE HERE ***"
-        print(reward)
+        sample = reward + self.discount * self.computeValueFromQValues(nextState)
+        key = state,action
+        self.q_values[key] = (1.0 - self.alpha) * self.getQValue(state,action) + self.alpha * sample
+        #util.raiseNotDefined()
+        """
+
         actionsFromNextState = self.getLegalActions(nextState)
         maxqnext = -999999
         for act in actionsFromNextState:
@@ -127,6 +131,8 @@ class QLearningGhostAgent(ReinforcementGhostAgent):
         for feature in features.keys():
             self.weights[feature] += self.alpha * diff * features[feature]
         #util.raiseNotDefined()
+    
+        
 
 
     def final(self, state):
