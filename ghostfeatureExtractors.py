@@ -20,9 +20,9 @@ import util
 class GhostFeatureExtractor:
     def getFeatures(self, state, action):
         """
-          Returns a dict from features to counts
-          Usually, the count will just be 1.0 for
-          indicator functions.
+        Returns a dict from features to counts
+        Usually, the count will just be 1.0 for
+        indicator functions.
         """
         util.raiseNotDefined()
 
@@ -34,7 +34,5 @@ class GhostIdentityExtractor(GhostFeatureExtractor):
 
 
 class GhostAdvancedExtractor(GhostFeatureExtractor):
-    
-    
     def getFeatures(self, state, action):
-        return 
+        return 10
