@@ -20,25 +20,25 @@ import random,util,math
 import pickle
 class QLearningGhostAgent(ReinforcementGhostAgent):
     """
-      Q-Learning Ghost Agent
+    Q-Learning Ghost Agent
 
-      Functions you should fill in:
+    Functions you should fill in:
         - computeValueFromQValues
         - computeActionFromQValues
         - getQValue
         - getAction
         - update
 
-      Instance variables you have access to
+    Instance variables you have access to
         - self.epsilon (exploration prob)
         - self.alpha (learning rate)
         - self.discount (discount rate)
 
-      Functions you should use
+    Functions you should use
         - self.getLegalActions(state)
-          which returns legal actions for a state
+        which returns legal actions for a state
     """
-    def __init__(self,epsilon=0.05,gamma=0.8,alpha=0.2, numTraining=0,agentIndex=1, extractor='GhostIdentityExtractor', **args):
+    def __init__(self,epsilon=0.05,gamma=0.8,alpha=0.2, numTraining=0,agentIndex=1, extractor='GhostAdvancedExtractor', **args):
         "You can initialize Q-values here..."
         args['epsilon'] = epsilon
         args['gamma'] = gamma
@@ -57,10 +57,6 @@ class QLearningGhostAgent(ReinforcementGhostAgent):
         """
         Normal Q learning
         """
-        """
-        return self.q_values[state,action]
-        """
-
         f = self.featExtractor
         features = f.getFeatures(state,action)
         qvalue = 0
@@ -70,10 +66,10 @@ class QLearningGhostAgent(ReinforcementGhostAgent):
 
     def computeValueFromQValues(self, state):
         """
-          Returns max_action Q(state,action)
-          where the max is over legal actions.  Note that if
-          there are no legal actions, which is the case at the
-          terminal state, you should return a value of 0.0.
+        Returns max_action Q(state,action)
+        where the max is over legal actions.  Note that if
+        there are no legal actions, which is the case at the
+        terminal state, you should return a value of 0.0.
         """
         legalActions = self.getLegalActions(state)
         if len(legalActions) == 0:
@@ -87,9 +83,9 @@ class QLearningGhostAgent(ReinforcementGhostAgent):
         
     def computeActionFromQValues(self, state):
         """
-          Compute the best action to take in a state.  Note that if there
-          are no legal actions, which is the case at the terminal state,
-          you should return None.
+        Compute the best action to take in a state.  Note that if there
+        are no legal actions, which is the case at the terminal state,
+        you should return None.
         """
         bestAction = [None]
         legalActions = self.getLegalActions(state)
@@ -131,9 +127,6 @@ class QLearningGhostAgent(ReinforcementGhostAgent):
         for feature in features.keys():
             self.weights[feature] += self.alpha * diff * features[feature]
         #util.raiseNotDefined()
-    
-        
-
 
     def final(self, state):
         "Called at the end of each game."
@@ -141,17 +134,14 @@ class QLearningGhostAgent(ReinforcementGhostAgent):
         ReinforcementGhostAgent.final(self, state) 
         # did we finish training?
         if self.episodesSoFar == self.numTraining:
-            
             # you might want to print your weights here for debugging
-            "*** YOUR CODE HERE ***"
-            #sys.exit(1)
-            pass
+            print(self.weights)
 
     def getAction(self, state):
         #Uncomment the following if you want one of your agent to be a random agent.
         #if self.agentIndex == 1:
         #    return random.choice(self.getLegalActions(state))
-        if self.agentIndex == 1:
+        if util.flipCoin(self.epsilon):
             action = random.choice(self.getLegalActions(state))
             self.doAction(state, action)
             return action
@@ -166,6 +156,3 @@ class QLearningGhostAgent(ReinforcementGhostAgent):
 
     def getValue(self, state):
         return self.computeValueFromQValues(state)
-
-
-    
