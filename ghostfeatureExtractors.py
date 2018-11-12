@@ -20,25 +20,6 @@ from math import sqrt
 import numpy as np
 
 
-def closestCapsule(pos, capsules, walls):
-    fringe = [(pos[0], pos[1], 0)]
-    expanded = set()
-    while fringe:
-        pos_x, pos_y, dist = fringe.pop(0)
-        if (pos_x, pos_y) in expanded:
-            continue
-        expanded.add((pos_x, pos_y))
-        # if we find a capsule at this location then exit
-        if (pos_x, pos_y) in capsules:
-            return dist
-        # otherwise spread out from the location to its neighbours
-        nbrs = Actions.getLegalNeighbors((pos_x, pos_y), walls)
-        for nbr_x, nbr_y in nbrs:
-            fringe.append((nbr_x, nbr_y, dist+1))
-    # no capsule found
-    return None
-
-
 class GhostFeatureExtractor:
     def getFeatures(self, state, action):
         """
@@ -82,41 +63,46 @@ class GhostAdvancedExtractor(GhostFeatureExtractor):
         walls = state.getWalls()
 
         
-        # ## Feature 1: Distance from pacman
+        # ## Feature: Distance from pacman
         # features['ghost_a_pacman_proximity'] = util.manhattanDistance(
         #     ghost_a_pos, pacman_pos)
         # features['ghost_b_pacman_proximity'] = util.manhattanDistance(
         #     ghost_b_pos, pacman_pos)
 
 
-        ## Feature 2: Find distance to pacman's next position
-        features['ghost_a_pacman_real_distance'] = pacmanDistanceBFS(ghost_a_pos, pacman_next_pos, walls)
-        features['ghost_b_pacman_real_distance'] = pacmanDistanceBFS(ghost_b_pos, pacman_next_pos, walls)
+        ## Feature: Find distance to pacman's next position
+        features['ghost_a_pacman_real_distance'] = 1 / (pacmanDistanceBFS(ghost_a_pos, pacman_next_pos, walls) + 10)
+        features['ghost_b_pacman_real_distance'] = 1 / (pacmanDistanceBFS(ghost_b_pos, pacman_next_pos, walls) + 10)
 
-        ## Feature: Make real distance negative if ghosts are scared
-        negate = 1
+        ## Feature: Scared Ghost
+        features['ghost_is_scared'] = 0
         if state.getGhostState(1).scaredTimer > 0:
-            negate = -1
-        features['ghost_a_scared_pacman_real_distance'] = pacmanDistanceBFS(ghost_a_pos, pacman_next_pos, walls) * negate
-        features['ghost_b_scared_pacman_real_distance'] = pacmanDistanceBFS(ghost_b_pos, pacman_next_pos, walls) * negate
+            features['ghost_is_scared'] = 12
+            features['ghost_a_pacman_real_distance'] = 0
+            features['ghost_b_pacman_real_distance'] = 0
+        
+
+        ## Feature: Get num of capsules
+        # features['1_capsule_left'] = 0
+        # if capsules == 1:
+        #     features['1_capsule_left'] = 5
 
 
-        # ## Feature 3: If pacman dist is near, additional feature to give chase
+        # ## Feature: If pacman dist is near, additional feature to give chase
         # if(features['ghost_a_pacman_proximity'] >= 0.4):
         #     features['ghost_a_chase'] = 10
         # if(features['ghost_b_pacman_proximity'] >= 0.4):
         #     features['ghost_b_chase'] = 10
 
         
-        # ## Feature 4: Run away when Pacman is near capsule
-        # cap_dist = closestCapsule((next_x, next_y), capsules, walls)
-        # if cap_dist is not None:
-        #     # Make the distance a number less than one otherwise the update will diverge wildly
-        #     features["run_away"] = float(cap_dist) / \
-        #         (walls.width * walls.height) * -1
+        ## Feature: Run away when Pacman is near capsule
+        cap_dist = closestCapsule((next_x, next_y), capsules, walls)
+        if cap_dist is not None:
+            features["run_away"] = float(cap_dist) / (walls.width * walls.height) * -1
 
         
         ## Return all features
+        # print('features = ' + str(features))
         features.divideAll(10)
         return features
 
@@ -146,3 +132,21 @@ def pacmanDistanceBFS(ghost_pos, pacman_pos, walls):
     
     # Pacman not found
     return -1
+
+def closestCapsule(pos, capsules, walls):
+    fringe = [(pos[0], pos[1], 0)]
+    expanded = set()
+    while fringe:
+        pos_x, pos_y, dist = fringe.pop(0)
+        if (pos_x, pos_y) in expanded:
+            continue
+        expanded.add((pos_x, pos_y))
+        # if we find a capsule at this location then exit
+        if (pos_x, pos_y) in capsules:
+            return dist
+        # otherwise spread out from the location to its neighbours
+        nbrs = Actions.getLegalNeighbors((pos_x, pos_y), walls)
+        for nbr_x, nbr_y in nbrs:
+            fringe.append((nbr_x, nbr_y, dist+1))
+    # no capsule found
+    return None
