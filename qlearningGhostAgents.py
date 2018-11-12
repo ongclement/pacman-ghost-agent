@@ -147,7 +147,7 @@ class QLearningGhostAgent(ReinforcementGhostAgent):
         # did we finish training?
         if self.episodesSoFar == self.numTraining:
             # you might want to print your weights here for debugging
-            for feature in self.features_dict.keys():
+            # for feature in self.features_dict.keys():
                 # print(str(len(self.features_dict[feature])) + '=' + str(len(self.weights_dict[feature])))
                 # steps = range(0, len(self.features_dict[feature]))
                 # plt.plot(steps, self.features_dict[feature], 'Feature value')
@@ -155,7 +155,8 @@ class QLearningGhostAgent(ReinforcementGhostAgent):
                 # plt.xlabel('Step')
                 # plt.title(feature)
                 # plt.show()
-                print(self.weights)
+            
+            print(self.weights)
 
     def getAction(self, state):
         #Uncomment the following if you want one of your agent to be a random agent.
