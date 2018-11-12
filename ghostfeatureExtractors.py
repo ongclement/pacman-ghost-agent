@@ -33,25 +33,40 @@ class GhostIdentityExtractor(GhostFeatureExtractor):
         feats[(state,action)] = 1.0
         return feats
 
-# def closestFood(pos, food, walls):
+def aStarSearch():
+    from game import Directions
 
-#         fringe = [(pos[0], pos[1], 0)]
-#         expanded = set()
-#         while fringe:
-#             pos_x, pos_y, dist = fringe.pop(0)
-#             if (pos_x, pos_y) in expanded:
-#                 continue
-#             expanded.add((pos_x, pos_y))
-#             # if we find a food at this location then exit
-#             if food[pos_x][pos_y]:
-#                 return dist
-#             # otherwise spread out from the location to its neighbours
-#             nbrs = Actions.getLegalNeighbors((pos_x, pos_y), walls)
-#             for nbr_x, nbr_y in nbrs:
-#                 fringe.append((nbr_x, nbr_y, dist+1))
-#         # no food found
-#         return None
-        
+    #initialization
+    fringe = util.PriorityQueue() 
+    visitedList = []
+
+    #push the starting point into queue
+    fringe.push((problem.getStartState(),[],0),0 + heuristic(problem.getStartState(),problem)) # push starting point with priority num of 0
+    #pop out the point
+    (state,toDirection,toCost) = fringe.pop()
+    #add the point to visited list
+    visitedList.append((state,toCost + heuristic(problem.getStartState(),problem)))
+
+    while not problem.isGoalState(state): #while we do not find the goal point
+        successors = problem.getSuccessors(state) #get the point's succesors
+        for son in successors:
+            visitedExist = False
+            total_cost = toCost + son[2]
+            for (visitedState,visitedToCost) in visitedList:
+                # if the successor has not been visited, or has a lower cost than the previous one
+                if (son[0] == visitedState) and (total_cost >= visitedToCost): 
+                    visitedExist = True
+                    break
+
+            if not visitedExist:        
+                # push the point with priority num of its total cost
+                fringe.push((son[0],toDirection + [son[1]],toCost + son[2]),toCost + son[2] + heuristic(son[0],problem)) 
+                visitedList.append((son[0],toCost + son[2])) # add this point to visited list
+
+        (state,toDirection,toCost) = fringe.pop()
+
+    return toDirection
+
 class GhostAdvancedExtractor(GhostFeatureExtractor):
     def getFeatures(self, state, action):
         features = util.Counter()
@@ -59,16 +74,19 @@ class GhostAdvancedExtractor(GhostFeatureExtractor):
         ## Feature 1: Distance from pacman
         
         # Get their positions
-        ghost_a_x, ghost_a_y = state.getGhostPosition(1)
-        ghost_b_x, ghost_b_y = state.getGhostPosition(2)
-        pacman_x, pacman_y = state.getPacmanPosition()
+        ghost_a_pos = state.getGhostPosition(1)
+        ghost_b_pos = state.getGhostPosition(2)
+        pacman_pos = state.getPacmanPosition()
 
-        features['ghost_a_pacman_proximity'] = sqrt((ghost_a_x - pacman_x)**2 + (ghost_a_y - pacman_y)**2)
-        features['ghost_b_pacman_proximity'] = sqrt((ghost_b_x - pacman_x)**2 + (ghost_b_y - pacman_y)**2)
+        features['ghost_a_pacman_proximity'] = util.manhattanDistance(ghost_a_pos, pacman_pos)
+        features['ghost_b_pacman_proximity'] = util.manhattanDistance(ghost_b_pos, pacman_pos)
 
         ## Feature 2: Pacman's next position
 
+        
+
         # Return all features
+        features.divideAll(10)
         return features
 
 

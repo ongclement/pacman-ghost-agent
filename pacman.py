@@ -65,6 +65,7 @@ SCARED_TIME = 20    # Moves ghosts are scared
 COLLISION_TOLERANCE = 0.7  # How close ghosts must be to Pacman to kill
 TIME_PENALTY = 1  # Number of points lost each round
 PACMAN_NUM_TRAINING = 50  # Do not Change
+# PACMAN_NUM_TRAINING = 1
 MAX_TIME = 500 # Do not change
 global NUM_GAMES_GLOBAL, max_time_to_run 
 
