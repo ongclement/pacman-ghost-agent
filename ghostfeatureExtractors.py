@@ -55,40 +55,6 @@ class GhostIdentityExtractor(GhostFeatureExtractor):
         feats[(state, action)] = 1.0
         return feats
 
-def aStarSearch():
-    from game import Directions
-
-    #initialization
-    fringe = util.PriorityQueue() 
-    visitedList = []
-
-    #push the starting point into queue
-    fringe.push((problem.getStartState(),[],0),0 + heuristic(problem.getStartState(),problem)) # push starting point with priority num of 0
-    #pop out the point
-    (state,toDirection,toCost) = fringe.pop()
-    #add the point to visited list
-    visitedList.append((state,toCost + heuristic(problem.getStartState(),problem)))
-
-    while not problem.isGoalState(state): #while we do not find the goal point
-        successors = problem.getSuccessors(state) #get the point's succesors
-        for son in successors:
-            visitedExist = False
-            total_cost = toCost + son[2]
-            for (visitedState,visitedToCost) in visitedList:
-                # if the successor has not been visited, or has a lower cost than the previous one
-                if (son[0] == visitedState) and (total_cost >= visitedToCost): 
-                    visitedExist = True
-                    break
-
-            if not visitedExist:        
-                # push the point with priority num of its total cost
-                fringe.push((son[0],toDirection + [son[1]],toCost + son[2]),toCost + son[2] + heuristic(son[0],problem)) 
-                visitedList.append((son[0],toCost + son[2])) # add this point to visited list
-
-        (state,toDirection,toCost) = fringe.pop()
-
-    return toDirection
-
 class GhostAdvancedExtractor(GhostFeatureExtractor):
     def getFeatures(self, state, action):
         features = util.Counter()
@@ -100,17 +66,18 @@ class GhostAdvancedExtractor(GhostFeatureExtractor):
         ghost_b_pos = state.getGhostPosition(2)
         pacman_pos = state.getPacmanPosition()
 
-        features['ghost_a_pacman_proximity'] = util.manhattanDistance(ghost_a_pos, pacman_pos) / 10
-        features['ghost_b_pacman_proximity'] = util.manhattanDistance(ghost_b_pos, pacman_pos) / 10
+        features['ghost_a_pacman_proximity'] = util.manhattanDistance(ghost_a_pos, pacman_pos)
+        features['ghost_b_pacman_proximity'] = util.manhattanDistance(ghost_b_pos, pacman_pos)
 
         # Feature 2: Pacman's next position
 
+
         # Feature 3: If pacman dist is near, additional feature to give chase
         if(features['ghost_a_pacman_proximity'] >= 0.4):
-            features['ghost_a_chase'] = 1
+            features['ghost_a_chase'] = 10
 
         if(features['ghost_b_pacman_proximity'] >= 0.4):
-            features['ghost_b_chase'] = 1
+            features['ghost_b_chase'] = 10
 
         # Feature 4: Run away when Pacman is near capsule
         dx, dy = Actions.directionToVector(action)
@@ -120,39 +87,11 @@ class GhostAdvancedExtractor(GhostFeatureExtractor):
 
         cap_dist = closestCapsule((next_x, next_y), capsules, walls)
         if cap_dist is not None:
-            # make the distance a number less than one otherwise the update
+            # Make the distance a number less than one otherwise the update
             # will diverge wildly
             features["run_away"] = float(cap_dist) / \
                 (walls.width * walls.height) * -1
 
         # Return all features
+        features.divideAll(10)
         return features
-
-        # # extract the grid of food and wall locations and get the ghost locations
-        # food = state.getFood()
-        # walls = state.getWalls()
-        # ghosts = state.getGhostPositions()
-
-        # features = util.Counter()
-
-        # features["bias"] = 1.0
-
-        # # compute the location of pacman after he takes the action
-        # x, y = state.getPacmanPosition()
-        # dx, dy = Actions.directionToVector(action)
-        # next_x, next_y = int(x + dx), int(y + dy)
-
-        # # count the number of ghosts 1-step away
-        # features["#-of-ghosts-1-step-away"] = sum((next_x, next_y) in Actions.getLegalNeighbors(g, walls) for g in ghosts)
-
-        # # if there is no danger of ghosts then add the food feature
-        # if not features["#-of-ghosts-1-step-away"] and food[next_x][next_y]:
-        #     features["eats-food"] = 1.0
-
-        # dist = closestFood((next_x, next_y), food, walls)
-        # if dist is not None:
-        #     # make the distance a number less than one otherwise the update
-        #     # will diverge wildly
-        #     features["closest-food"] = float(dist) / (walls.width * walls.height)
-        # features.divideAll(10.0)
-        # return features

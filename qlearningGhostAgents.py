@@ -80,7 +80,6 @@ class QLearningGhostAgent(ReinforcementGhostAgent):
                 maxqvalue = self.getQValue(state,action)
         return maxqvalue  
 
-        
     def computeActionFromQValues(self, state):
         """
         Compute the best action to take in a state.  Note that if there
@@ -113,7 +112,6 @@ class QLearningGhostAgent(ReinforcementGhostAgent):
         self.q_values[key] = (1.0 - self.alpha) * self.getQValue(state,action) + self.alpha * sample
         #util.raiseNotDefined()
         """
-
         actionsFromNextState = self.getLegalActions(nextState)
         maxqnext = -999999
         for act in actionsFromNextState:
@@ -141,6 +139,11 @@ class QLearningGhostAgent(ReinforcementGhostAgent):
         #Uncomment the following if you want one of your agent to be a random agent.
         #if self.agentIndex == 1:
         #    return random.choice(self.getLegalActions(state))
+        # if self.agentIndex == 1:
+        #     # Make first ghost aStarSearch agent
+        #     action = aStarSearch(state)
+        #     self.doAction(state, action)
+        #     return action
         if util.flipCoin(self.epsilon):
             action = random.choice(self.getLegalActions(state))
             self.doAction(state, action)
@@ -156,3 +159,38 @@ class QLearningGhostAgent(ReinforcementGhostAgent):
 
     def getValue(self, state):
         return self.computeValueFromQValues(state)
+
+    def aStarSearch():
+    
+        # from game import Directions
+
+        # #initialization
+        # fringe = util.PriorityQueue() 
+        # visitedList = []
+
+        # #push the starting point into queue
+        # fringe.push((problem.getStartState(),[],0),0 + heuristic(problem.getStartState(),problem)) # push starting point with priority num of 0
+        # #pop out the point
+        # (state,toDirection,toCost) = fringe.pop()
+        # #add the point to visited list
+        # visitedList.append((state,toCost + heuristic(problem.getStartState(),problem)))
+
+        # while not problem.isGoalState(state): #while we do not find the goal point
+        #     successors = problem.getSuccessors(state) #get the point's succesors
+        #     for son in successors:
+        #         visitedExist = False
+        #         total_cost = toCost + son[2]
+        #         for (visitedState,visitedToCost) in visitedList:
+        #             # if the successor has not been visited, or has a lower cost than the previous one
+        #             if (son[0] == visitedState) and (total_cost >= visitedToCost): 
+        #                 visitedExist = True
+        #                 break
+
+        #         if not visitedExist:        
+        #             # push the point with priority num of its total cost
+        #             fringe.push((son[0],toDirection + [son[1]],toCost + son[2]),toCost + son[2] + heuristic(son[0],problem)) 
+        #             visitedList.append((son[0],toCost + son[2])) # add this point to visited list
+
+        #     (state,toDirection,toCost) = fringe.pop()
+
+        # return toDirection
