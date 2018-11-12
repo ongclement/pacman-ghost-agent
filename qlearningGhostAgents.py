@@ -161,7 +161,7 @@ class QLearningGhostAgent(ReinforcementGhostAgent):
         return self.computeValueFromQValues(state)
 
     def aStarSearch():
-    
+        pass
         # from game import Directions
 
         # #initialization
