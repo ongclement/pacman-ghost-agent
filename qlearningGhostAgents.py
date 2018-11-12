@@ -18,6 +18,8 @@ from ghostfeatureExtractors import *
 import sys
 import random,util,math
 import pickle
+import keras
+
 class QLearningGhostAgent(ReinforcementGhostAgent):
     """
     Q-Learning Ghost Agent
@@ -152,7 +154,6 @@ class QLearningGhostAgent(ReinforcementGhostAgent):
             action = self.computeActionFromQValues(state)
             self.doAction(state, action)
             return action
-            
 
     def getPolicy(self, state):
         return self.computeActionFromQValues(state)
@@ -194,3 +195,65 @@ class QLearningGhostAgent(ReinforcementGhostAgent):
         #     (state,toDirection,toCost) = fringe.pop()
 
         # return toDirection
+
+# class ActorCriticModel(keras.Model):
+#     def __init__(self, state_size, action_size):
+#         super(ActorCriticModel, self).__init__()
+#         self.state_size = state_size
+#         self.action_size = action_size
+#         self.dense1 = layers.Dense(100, activation='relu')
+#         self.policy_logits = layers.Dense(action_size)
+#         self.dense2 = layers.Dense(100, activation='relu')
+#         self.values = layers.Dense(1)
+
+#     def call(self, inputs):
+#         # Forward pass
+#         x = self.dense1(inputs)
+#         logits = self.policy_logits(x)
+#         v1 = self.dense2(inputs)
+#         values = self.values(v1)
+#         return logits, values
+
+# class MasterAgent():
+#     def __init__(self):
+#         save_dir = args.save_dir
+#         self.save_dir = save_dir
+#         if not os.path.exists(save_dir):
+#             os.makedirs(save_dir)
+
+#         env = gym.make(self.game_name)
+#         self.state_size = env.observation_space.shape[0]
+#         self.action_size = env.action_space.n
+#         self.opt = tf.train.AdamOptimizer(args.lr, use_locking=True)
+        print(self.state_size, self.action_size)
+
+        self.global_model = ActorCriticModel(self.state_size, self.action_size)  # global network
+        self.global_model(tf.convert_to_tensor(np.random.random((1, self.state_size)), dtype=tf.float32))
+
+    def train(self):
+        if args.algorithm == 'random':
+            random_agent = RandomAgent(self.game_name, args.max_eps)
+            random_agent.run()
+            return
+
+        res_queue = Queue()
+
+        workers = [Worker(self.state_size,
+                        self.action_size,
+                        self.global_model,
+                        self.opt, res_queue,
+                        i, game_name=self.game_name,
+                        save_dir=self.save_dir) for i in range(multiprocessing.cpu_count())]
+
+        for i, worker in enumerate(workers):
+            print("Starting worker {}".format(i))
+            worker.start()
+
+        moving_average_rewards = []  # record episode reward to plot
+        while True:
+            reward = res_queue.get()
+            if reward is not None:
+                moving_average_rewards.append(reward)
+            else:
+                break
+        [w.join() for w in workers]
