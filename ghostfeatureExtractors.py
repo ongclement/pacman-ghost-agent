@@ -20,6 +20,25 @@ from math import sqrt
 import numpy as np
 
 
+def ghostDistance(pacman_pos, ghost_pos, walls):
+    fringe = [(pacman_pos[0], pacman_pos[1], 0)]
+    expanded = set()
+    while fringe:
+        pos_x, pos_y, dist = fringe.pop(0)
+        if (pos_x, pos_y) in expanded:
+            continue
+        expanded.add((pos_x, pos_y))
+        # if we find a capsule at this location then exit
+        if (pos_x, pos_y) == (int(ghost_pos[0]), int(ghost_pos[1])):
+            return dist
+        # otherwise spread out from the location to its neighbours
+        nbrs = Actions.getLegalNeighbors((pos_x, pos_y), walls)
+        for nbr_x, nbr_y in nbrs:
+            fringe.append((nbr_x, nbr_y, dist+1))
+    # no capsule found
+    return None
+
+
 class GhostFeatureExtractor:
     def getFeatures(self, state, action):
         """
@@ -39,7 +58,7 @@ class GhostIdentityExtractor(GhostFeatureExtractor):
 
 class GhostAdvancedExtractor(GhostFeatureExtractor):
     def getFeatures(self, state, action):
-        ## Boiler plate
+        # Boiler plate
         # Declare features
         features = util.Counter()
 
@@ -62,17 +81,44 @@ class GhostAdvancedExtractor(GhostFeatureExtractor):
         # Get walls in state
         walls = state.getWalls()
 
-        
+        if state.getGhostPosition(1) != (1, 9) and state.getGhostPosition(1) != (2, 9):
+            x, y = state.getGhostPosition(1)
+            dx, dy = Actions.directionToVector(action)
+            next_x, next_y = int(x + dx), int(y + dy)
+
+            ghost_a_dist = closestCapsule((next_x, next_y), [(1, 9)], walls)
+            # # ghost_b_dist = ghostDistance(ghost_b_pos, capsules[1], walls)
+            if ghost_a_dist is not None:
+                features["ghost_dist"] = float(ghost_a_dist) / \
+                    (walls.width * walls.height)
+        elif len(state.getCapsules()) <= 1:
+            features['ghost_b_pacman_real_distance'] = 1 / \
+                (pacmanDistanceBFS(ghost_b_pos, pacman_next_pos, walls) + 10)
+            # x, y = state.getGhostPosition(2)
+            # dx, dy = Actions.directionToVector(action)
+            # next_x, next_y = int(x + dx), int(y + dy)
+
+            # ghost_b_dist = ghostDistance((next_x, next_y), pacman_pos, walls)
+            # if ghost_b_dist is not None:
+            #     features["ghost_b_dist"] = float(ghost_b_dist) / \
+            #         (walls.width * walls.height)
+
         # ## Feature: Distance from pacman
         # features['ghost_a_pacman_proximity'] = util.manhattanDistance(
         #     ghost_a_pos, pacman_pos)
         # features['ghost_b_pacman_proximity'] = util.manhattanDistance(
         #     ghost_b_pos, pacman_pos)
 
+        # ## Feature: Find distance to pacman's next position
+        # features['ghost_a_pacman_real_distance'] = 1 / (pacmanDistanceBFS(ghost_a_pos, pacman_next_pos, walls) + 10)
+        # features['ghost_b_pacman_real_distance'] = 1 / (pacmanDistanceBFS(ghost_b_pos, pacman_next_pos, walls) + 10)
 
-        ## Feature: Find distance to pacman's next position
-        features['ghost_a_pacman_real_distance'] = 1 / (pacmanDistanceBFS(ghost_a_pos, pacman_next_pos, walls) + 10)
-        features['ghost_b_pacman_real_distance'] = 1 / (pacmanDistanceBFS(ghost_b_pos, pacman_next_pos, walls) + 10)
+        # ## Feature: Scared Ghost
+        # features['ghost_is_scared'] = 0
+        # if state.getGhostState(1).scaredTimer > 0:
+        #     features['ghost_is_scared'] = 12
+        #     features['ghost_a_pacman_real_distance'] = 0
+        #     features['ghost_b_pacman_real_distance'] = 0
 
         ## Feature: Scared Ghost
         features['ghost_is_scared'] = 0
@@ -87,22 +133,18 @@ class GhostAdvancedExtractor(GhostFeatureExtractor):
         # if capsules == 1:
         #     features['1_capsule_left'] = 5
 
-
         # ## Feature: If pacman dist is near, additional feature to give chase
         # if(features['ghost_a_pacman_proximity'] >= 0.4):
         #     features['ghost_a_chase'] = 10
         # if(features['ghost_b_pacman_proximity'] >= 0.4):
         #     features['ghost_b_chase'] = 10
-        
-        ## Feature: Run away when Pacman is near capsule
-        cap_dist = closestCapsule((next_x, next_y), capsules, walls)
-        if cap_dist is not None:
-            features["run_away"] = float(cap_dist) / (walls.width * walls.height) * -1
 
-        ## Feature: Get time left
+        # Feature: Run away when Pacman is near capsule
+        # cap_dist = closestCapsule((next_x, next_y), capsules, walls)
+        # if cap_dist is not None:
+        #     features["run_away"] = float(cap_dist) / (walls.width * walls.height) * -1
 
-        
-        ## Return all features
+        # Return all features
         # print('features = ' + str(features))
         features.divideAll(10)
         return features
@@ -115,7 +157,7 @@ class GhostAdvancedExtractor(GhostFeatureExtractor):
 def pacmanDistanceBFS(ghost_pos, pacman_pos, walls):
     breadth = [(ghost_pos[0], ghost_pos[1], 0)]
     expanded = set()
-    
+
     while breadth:
         pos_x, pos_y, dist = breadth.pop(0)
         if (pos_x, pos_y) in expanded:
@@ -125,14 +167,15 @@ def pacmanDistanceBFS(ghost_pos, pacman_pos, walls):
         # Exit if pacman is found
         if (pos_x, pos_y) == (pacman_pos[0], pacman_pos[1]):
             return dist
-        
+
         # Otherwise spread out from the location to its neighbours
         nbrs = Actions.getLegalNeighbors((pos_x, pos_y), walls)
         for nbr_x, nbr_y in nbrs:
             breadth.append((nbr_x, nbr_y, dist+1))
-    
+
     # Pacman not found
     return -1
+
 
 def closestCapsule(pos, capsules, walls):
     fringe = [(pos[0], pos[1], 0)]
