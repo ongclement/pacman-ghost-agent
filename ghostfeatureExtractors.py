@@ -157,6 +157,7 @@ class GhostAdvancedExtractor(GhostFeatureExtractor):
 def pacmanDistanceBFS(ghost_pos, pacman_pos, walls):
     breadth = [(ghost_pos[0], ghost_pos[1], 0)]
     expanded = set()
+    distances = []
 
     while breadth:
         pos_x, pos_y, dist = breadth.pop(0)
@@ -164,17 +165,19 @@ def pacmanDistanceBFS(ghost_pos, pacman_pos, walls):
             continue
         expanded.add((pos_x, pos_y))
 
-        # Exit if pacman is found
+        # If pacman is found
         if (pos_x, pos_y) == (pacman_pos[0], pacman_pos[1]):
-            return dist
+            distances.append(dist)
 
         # Otherwise spread out from the location to its neighbours
         nbrs = Actions.getLegalNeighbors((pos_x, pos_y), walls)
         for nbr_x, nbr_y in nbrs:
             breadth.append((nbr_x, nbr_y, dist+1))
 
-    # Pacman not found
-    return -1
+    # Return min distance
+    if distances:
+        return 1 / (min(distances) + 1)
+    return 0
 
 
 def closestCapsule(pos, capsules, walls):
