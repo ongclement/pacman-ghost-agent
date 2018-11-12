@@ -66,7 +66,16 @@ class GhostAdvancedExtractor(GhostFeatureExtractor):
         ghost_a_pos = state.getGhostPosition(1)
         ghost_b_pos = state.getGhostPosition(2)
         pacman_pos = state.getPacmanPosition()
+        ghost_a_x, ghost_a_y = state.getGhostPosition(1)
+        ghost_b_x, ghost_b_y = state.getGhostPosition(2)
+        pacman_x, pacman_y = state.getPacmanPosition()
 
+        # features['ghost_a_pacman_proximity'] = sqrt(
+        #     (ghost_a_x - pacman_x)**2 + (ghost_a_y - pacman_y)**2)
+        # features['ghost_b_pacman_proximity'] = sqrt(
+        #     (ghost_b_x - pacman_x)**2 + (ghost_b_y - pacman_y)**2)
+
+        # lesser dist means lesser reward
         features['ghost_a_pacman_proximity'] = util.manhattanDistance(
             ghost_a_pos, pacman_pos)
         features['ghost_b_pacman_proximity'] = util.manhattanDistance(
@@ -74,7 +83,7 @@ class GhostAdvancedExtractor(GhostFeatureExtractor):
 
         # Feature 2: Pacman's next position
 
-        # Feature 3: If pacman dist is near, additional feature to give chase
+        # # Feature 3: If pacman dist is near, additional feature to give chase
         if(features['ghost_a_pacman_proximity'] >= 0.4):
             features['ghost_a_chase'] = 10
 
@@ -93,6 +102,8 @@ class GhostAdvancedExtractor(GhostFeatureExtractor):
             # will diverge wildly
             features["run_away"] = float(cap_dist) / \
                 (walls.width * walls.height) * -1
+
+        # print(features)
 
         # Feature 5:
         # features["food-left"] = state.getNumFood() * 0.1
