@@ -78,8 +78,8 @@ class GhostAdvancedExtractor(GhostFeatureExtractor):
         features['ghost_is_scared'] = 0
         if state.getGhostState(1).scaredTimer > 0:
             features['ghost_is_scared'] = 12
-            features['ghost_a_pacman_real_distance'] = 0
-            features['ghost_b_pacman_real_distance'] = 0
+            features['ghost_a_pacman_real_distance'] *= -1
+            features['ghost_b_pacman_real_distance'] *= -1
         
 
         ## Feature: Get num of capsules
@@ -93,12 +93,13 @@ class GhostAdvancedExtractor(GhostFeatureExtractor):
         #     features['ghost_a_chase'] = 10
         # if(features['ghost_b_pacman_proximity'] >= 0.4):
         #     features['ghost_b_chase'] = 10
-
         
         ## Feature: Run away when Pacman is near capsule
         cap_dist = closestCapsule((next_x, next_y), capsules, walls)
         if cap_dist is not None:
             features["run_away"] = float(cap_dist) / (walls.width * walls.height) * -1
+
+        ## Feature: Get time left
 
         
         ## Return all features
