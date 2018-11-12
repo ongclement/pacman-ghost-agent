@@ -81,7 +81,26 @@ class GhostAdvancedExtractor(GhostFeatureExtractor):
         # Get walls in state
         walls = state.getWalls()
 
-        if state.getGhostPosition(1) != (1, 9) and state.getGhostPosition(1) != (2, 9):
+        if state.getGhostPosition(1) == (1, 9) or state.getGhostPosition(1) == (2, 9):
+            # features['ghost_b_pacman_real_distance'] = 1 / \
+            #     (pacmanDistanceBFS(ghost_b_pos, pacman_next_pos, walls) + 10) * 10
+            # print(features)
+            # features['ghost_b_pacman_proximity'] = util.manhattanDistance(
+            #     ghost_b_pos, pacman_pos)
+            # if(features['ghost_b_pacman_proximity'] >= 0.4):
+            #     features['ghost_b_chase'] = 10
+            if len(state.getCapsules()) > 1 or state.getGhostState(1).scaredTimer > 0:
+                features["ghost_b_dist"] = 0
+
+            x, y = state.getGhostPosition(2)
+            dx, dy = Actions.directionToVector(action)
+            next_x, next_y = int(x + dx), int(y + dy)
+
+            ghost_b_dist = ghostDistance((next_x, next_y), pacman_pos, walls)
+            if ghost_b_dist is not None:
+                features["ghost_b_dist"] = float(ghost_b_dist) / \
+                    (walls.width * walls.height) * 10
+        else:
             x, y = state.getGhostPosition(1)
             dx, dy = Actions.directionToVector(action)
             next_x, next_y = int(x + dx), int(y + dy)
@@ -91,17 +110,7 @@ class GhostAdvancedExtractor(GhostFeatureExtractor):
             if ghost_a_dist is not None:
                 features["ghost_dist"] = float(ghost_a_dist) / \
                     (walls.width * walls.height)
-        elif len(state.getCapsules()) <= 1:
-            features['ghost_b_pacman_real_distance'] = 1 / \
-                (pacmanDistanceBFS(ghost_b_pos, pacman_next_pos, walls) + 10)
-            # x, y = state.getGhostPosition(2)
-            # dx, dy = Actions.directionToVector(action)
-            # next_x, next_y = int(x + dx), int(y + dy)
-
-            # ghost_b_dist = ghostDistance((next_x, next_y), pacman_pos, walls)
-            # if ghost_b_dist is not None:
-            #     features["ghost_b_dist"] = float(ghost_b_dist) / \
-            #         (walls.width * walls.height)
+        # elif len(state.getCapsules()) <= 1:
 
         # ## Feature: Distance from pacman
         # features['ghost_a_pacman_proximity'] = util.manhattanDistance(
