@@ -166,6 +166,17 @@ class QLearningGhostAgent(ReinforcementGhostAgent):
         #     action = aStarSearch(state)
         #     self.doAction(state, action)
         #     return action
+        if self.agentIndex == 1 and state.getGhostPosition(1) == (1, 9):
+            # if self.blueGhostAction == 'EAST' and 'WEST' in self.getLegalActions(state):
+            self.doAction(state, 'East')
+            return 'East'
+            #     self.blueGhostAction = 'WEST'
+            # elif 'EAST'in self.getLegalActions(state):
+            #     self.doAction('EAST')
+            #     self.blueGhostAction = 'EAST'
+        if self.agentIndex == 1 and state.getGhostPosition(1) == (2, 9):
+            self.doAction(state, 'West')
+            return 'West'
         if util.flipCoin(self.epsilon):
             action = random.choice(self.getLegalActions(state))
             self.doAction(state, action)
