@@ -100,10 +100,8 @@ class GhostAdvancedExtractor(GhostFeatureExtractor):
         ghost_b_pos = state.getGhostPosition(2)
         pacman_pos = state.getPacmanPosition()
 
-        features['ghost_a_pacman_proximity'] = util.manhattanDistance(ghost_a_pos, pacman_pos)
-        features['ghost_b_pacman_proximity'] = util.manhattanDistance(ghost_b_pos, pacman_pos)
-
-        # print(features)
+        features['ghost_a_pacman_proximity'] = util.manhattanDistance(ghost_a_pos, pacman_pos) / 10
+        features['ghost_b_pacman_proximity'] = util.manhattanDistance(ghost_b_pos, pacman_pos) / 10
 
         # Feature 2: Pacman's next position
 
@@ -115,9 +113,8 @@ class GhostAdvancedExtractor(GhostFeatureExtractor):
             features['ghost_b_chase'] = 1
 
         # Feature 4: Run away when Pacman is near capsule
-
         dx, dy = Actions.directionToVector(action)
-        next_x, next_y = int(pacman_x + dx), int(pacman_y + dy)
+        next_x, next_y = int(pacman_pos[0] + dx), int(pacman_pos[1] + dy)
         capsules = state.getCapsules()
         walls = state.getWalls()
 
@@ -128,10 +125,7 @@ class GhostAdvancedExtractor(GhostFeatureExtractor):
             features["run_away"] = float(cap_dist) / \
                 (walls.width * walls.height) * -1
 
-        print(features)
-
         # Return all features
-        features.divideAll(10)
         return features
 
         # # extract the grid of food and wall locations and get the ghost locations
