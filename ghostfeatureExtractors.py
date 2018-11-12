@@ -66,6 +66,9 @@ class GhostAdvancedExtractor(GhostFeatureExtractor):
         ghost_a_pos = state.getGhostPosition(1)
         ghost_b_pos = state.getGhostPosition(2)
         pacman_pos = state.getPacmanPosition()
+        ghost_a_x, ghost_a_y = state.getGhostPosition(1)
+        ghost_b_x, ghost_b_y = state.getGhostPosition(2)
+        pacman_x, pacman_y = state.getPacmanPosition()
 
         # Get pacman's next position
         dx, dy = Actions.directionToVector(action)
