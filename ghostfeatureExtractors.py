@@ -101,15 +101,17 @@ class GhostAdvancedExtractor(GhostFeatureExtractor):
             # if ghost_b_dist is not None:
             #     features["ghost_b_dist"] = float(ghost_b_dist) / \
             #         (walls.width * walls.height) * 10
-            x, y = state.getGhostPosition(2)
-            dx, dy = Actions.directionToVector(action)
-            next_x, next_y = int(x + dx), int(y + dy)
+            if len(state.getCapsules()) == 2:
+                x, y = state.getGhostPosition(2)
+                dx, dy = Actions.directionToVector(action)
+                next_x, next_y = int(x + dx), int(y + dy)
 
-            ghost_b_dist = closestCapsule((next_x, next_y), [(1, 9)], walls)
-            # # ghost_b_dist = ghostDistance(ghost_b_pos, capsules[1], walls)
-            if ghost_b_dist is not None:
-                features["ghost_dist"] = float(ghost_b_dist) / \
-                    (walls.width * walls.height)
+                ghost_b_dist = closestCapsule(
+                    (next_x, next_y), [(1, 9)], walls)
+                # # ghost_b_dist = ghostDistance(ghost_b_pos, capsules[1], walls)
+                if ghost_b_dist is not None:
+                    features["ghost_dist"] = float(ghost_b_dist) / \
+                        (walls.width * walls.height)
 
             # if len(state.getCapsules()) > 1 or state.getGhostState(1).scaredTimer > 0:
             #     features["ghost_b_dist"] = 0
@@ -129,8 +131,10 @@ class GhostAdvancedExtractor(GhostFeatureExtractor):
                     features["ghost_1_1_dist"] = float(ghost_b_dist) / \
                         (walls.width * walls.height)
             if len(state.getCapsules()) == 1 and state.getGhostState(1).scaredTimer == 0:
+                features["ghost_dist"] = 0
+                features["ghost_1_1_dist"] = 0
                 features["ghost_start_chase"] = util.manhattanDistance(
-                    ghost_b_pos, pacman_pos)
+                    ghost_b_pos, pacman_pos) * 3
 
         else:
             x, y = state.getGhostPosition(1)
@@ -162,11 +166,11 @@ class GhostAdvancedExtractor(GhostFeatureExtractor):
         #     features['ghost_b_pacman_real_distance'] = 0
 
         # Feature: Scared Ghost
-        features['ghost_is_scared'] = 0
-        if state.getGhostState(1).scaredTimer > 0:
-            features['ghost_is_scared'] = 12
-            features['ghost_a_pacman_real_distance'] *= -1
-            features['ghost_b_pacman_real_distance'] *= -1
+        # features['ghost_is_scared'] = 0
+        # if state.getGhostState(1).scaredTimer > 0:
+        #     features['ghost_is_scared'] = 12
+        #     features['ghost_a_pacman_real_distance'] *= -1
+        #     features['ghost_b_pacman_real_distance'] *= -1
 
         # Feature: Get num of capsules
         # features['1_capsule_left'] = 0
